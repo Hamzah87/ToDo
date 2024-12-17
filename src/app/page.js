@@ -83,6 +83,13 @@ const TaskManager = () => {
             {alert.message}
           </div>
         )}
+        <a
+          href="/api/tasks"
+          target="_blank"
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-2 mb-2 inline-block"
+        >
+          View All Tasks
+        </a>
 
         <form className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <input
