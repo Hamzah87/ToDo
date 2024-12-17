@@ -12,184 +12,141 @@ const TaskManager = () => {
   const [alert, setAlert] = useState({ message: '', type: '' });
 
   useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await axios.get('/api/tasks');
+        setTasks(response.data || []);
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+        setAlert({ message: 'Failed to load tasks. Please try again later.', type: 'error' });
+      }
+    };
     fetchTasks();
   }, []);
-
-  const fetchTasks = async () => {
-    try {
-      const response = await axios.get('/api/tasks');
-      setTasks(response.data || []);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-      setAlert({ message: 'Failed to load tasks. Please try again later.', type: 'error' });
-    }
-  };
 
   const addTask = async () => {
     if (!newTask.title || !newTask.dueDate || !newTask.description) {
       setAlert({ message: 'All fields are required.', type: 'error' });
-      setTimeout(() => setAlert({ message: '', type: '' }), 3000);
       return;
     }
     try {
       const response = await axios.post('/api/tasks', newTask);
-      setTasks((prevTasks) => [...prevTasks, response.data]);
+      setTasks([...tasks, response.data]);
       setNewTask({ title: '', dueDate: '', description: '' });
       setAlert({ message: 'Task added successfully!', type: 'success' });
-      setTimeout(() => setAlert({ message: '', type: '' }), 3000);
     } catch (error) {
       console.error('Error adding task:', error);
       setAlert({ message: 'Error adding task. Please try again.', type: 'error' });
-      setTimeout(() => setAlert({ message: '', type: '' }), 3000);
     }
   };
 
   const updateTask = async () => {
     if (!editingTask.title || !editingTask.dueDate || !editingTask.description) {
       setAlert({ message: 'All fields are required.', type: 'error' });
-      setTimeout(() => setAlert({ message: '', type: '' }), 3000);
       return;
     }
     try {
       const response = await axios.put(`/api/tasks/${editingTaskId}`, editingTask);
-      setTasks(tasks.map((t) => (t._id === editingTaskId ? response.data : t)));
+      setTasks(tasks.map(task => task._id === editingTaskId ? response.data : task));
       setEditingTaskId(null);
       setEditingTask({ title: '', dueDate: '', description: '' });
       setAlert({ message: 'Task updated successfully!', type: 'success' });
-      setTimeout(() => setAlert({ message: '', type: '' }), 3000);
     } catch (error) {
       console.error('Error updating task:', error);
       setAlert({ message: 'Error updating task. Please try again.', type: 'error' });
-      setTimeout(() => setAlert({ message: '', type: '' }), 3000);
     }
   };
 
   const deleteTask = async (id) => {
     try {
       await axios.delete(`/api/tasks/${id}`);
-      setTasks(tasks.filter((task) => task._id !== id));
+      setTasks(tasks.filter(task => task._id !== id));
       setAlert({ message: 'Task deleted successfully!', type: 'success' });
-      setTimeout(() => setAlert({ message: '', type: '' }), 3000);
     } catch (error) {
       console.error('Error deleting task:', error);
       setAlert({ message: 'Error deleting task. Please try again.', type: 'error' });
-      setTimeout(() => setAlert({ message: '', type: '' }), 3000);
     }
   };
 
   const handleEditClick = (task) => {
     setEditingTaskId(task._id);
-    setEditingTask({ ...task });
+    setEditingTask({ title: task.title, dueDate: task.dueDate, description: task.description });
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-3xl mx-auto bg-white shadow-md rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-4 text-gray-800">To-Do List</h1>
+    <div className="min-h-screen bg-blue-100 p-8">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 className="text-xl font-semibold mb-4">Task Manager</h1>
 
-        {/* Display Alert */}
         {alert.message && (
-          <div
-            className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 w-80 text-center text-white rounded-md shadow-lg ${
-              alert.type === 'error' ? 'bg-red-500' : 'bg-green-500'
-            }`}
-          >
+          <div className={`p-4 rounded-md text-white ${alert.type === 'error' ? 'bg-red-500' : 'bg-green-500'}`}>
             {alert.message}
           </div>
         )}
 
-        {/* Button to navigate to the /api/tasks page using a link */}
-        <a
-          href="/api/tasks"
-          target="_blank"
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-2 mb-2 inline-block"
-        >
-          View All Tasks
-        </a>
-
-        {/* New Task Form */}
-        <div className="flex flex-wrap items-center mb-6 space-x-4">
+        <form className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <input
             type="text"
-            value={newTask.title}
-            onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+            className="border border-gray-300 p-2 rounded-md"
             placeholder="Task Title"
-            className="flex-1 p-2 border rounded-md shadow-sm text-black mb-2 sm:mb-0"
+            value={editingTaskId ? editingTask.title : newTask.title}
+            onChange={(e) => editingTaskId ? setEditingTask({...editingTask, title: e.target.value}) : setNewTask({...newTask, title: e.target.value})}
           />
           <input
             type="date"
-            value={newTask.dueDate}
-            onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
-            onClick={(e) => e.target.showPicker()} // Trigger the date picker
-            className="p-2 border rounded-md mb-2 sm:mb-0 sm:w-auto text-black cursor-pointer"
+            className="border border-gray-300 p-2 rounded-md"
+            value={editingTaskId ? editingTask.dueDate : newTask.dueDate}
+            onChange={(e) => editingTaskId ? setEditingTask({...editingTask, dueDate: e.target.value}) : setNewTask({...newTask, dueDate: e.target.value})}
           />
           <input
             type="text"
-            value={newTask.description}
-            onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+            className="border border-gray-300 p-2 rounded-md"
             placeholder="Description"
-            className="flex-1 p-2 border rounded-md shadow-sm mb-2 sm:mb-0 text-black"
+            value={editingTaskId ? editingTask.description : newTask.description}
+            onChange={(e) => editingTaskId ? setEditingTask({...editingTask, description: e.target.value}) : setNewTask({...newTask, description: e.target.value})}
           />
-          <button onClick={addTask} className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-            Add Task
+          <button
+            type="button"
+            onClick={editingTaskId ? updateTask : addTask}
+            className="md:col-span-3 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+          >
+            {editingTaskId ? 'Update Task' : 'Add Task'}
           </button>
-        </div>
+        </form>
 
-        {/* Task List */}
-        <ul className="space-y-4">
-          {tasks.length > 0 ? (
-            tasks.map((task) => (
-              <li key={task._id} className="flex justify-between items-center p-4 bg-gray-50 rounded-md shadow-sm">
-                {editingTaskId === task._id ? (
-                  <div className="flex-1 space-y-2">
-                    <input
-                      type="text"
-                      name="title"
-                      value={editingTask.title}
-                      onChange={(e) => setEditingTask({ ...editingTask, title: e.target.value })}
-                      className="w-full p-1 border rounded text-gray-800"
-                    />
-                    <textarea
-                      name="description"
-                      value={editingTask.description}
-                      onChange={(e) => setEditingTask({ ...editingTask, description: e.target.value })}
-                      className="w-full p-1 border rounded text-gray-800"
-                      rows="2"
-                    />
-                    <input
-                      type="date"
-                      name="dueDate"
-                      value={editingTask.dueDate}
-                      onChange={(e) => setEditingTask({ ...editingTask, dueDate: e.target.value })}
-                      className="w-full p-1 border rounded text-gray-800"
-                    />
-                    <button onClick={updateTask} className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">
-                      Save
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <h2 className="font-semibold text-gray-800">{task.title}</h2>
-                      <p className="text-gray-600">{task.description}</p>
-                      <p className="text-gray-400 text-sm">Due: {format(new Date(task.dueDate), 'MMMM dd, yyyy')}</p>
-                    </div>
-                    <div className="space-x-2">
-                      <button onClick={() => handleEditClick(task)} className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600">
-                        Edit
-                      </button>
-                      <button onClick={() => deleteTask(task._id)} className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
-                        Delete
-                      </button>
-                    </div>
-                  </>
-                )}
-              </li>
-            ))
-          ) : (
-            <li className="text-center text-gray-500">No tasks available</li>
-          )}
-        </ul>
+        <table className="w-full text-sm text-left text-gray-500">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+              <th className="px-6 py-3">Title</th>
+              <th className="px-6 py-3">Due Date</th>
+              <th className="px-6 py-3">Description</th>
+              <th className="px-6 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {tasks.map((task) => (
+              <tr key={task._id} className="bg-white">
+                <td className="px-6 py-4">{task.title}</td>
+                <td className="px-6 py-4">{format(new Date(task.dueDate), 'PP')}</td>
+                <td className="px-6 py-4">{task.description}</td>
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() => handleEditClick(task)}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => deleteTask(task._id)}
+                    className="text-red-600 hover:underline ml-4"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
