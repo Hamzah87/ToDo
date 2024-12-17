@@ -86,7 +86,7 @@ const TaskManager = () => {
         <a
           href="/api/tasks"
           target="_blank"
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 mt-2 mb-2 inline-block"
+          className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 mt-2 mb-2 inline-block"
         >
           View All Tasks
         </a>
